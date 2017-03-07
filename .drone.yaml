@@ -1,0 +1,32 @@
+pipeline:
+
+  my-build:
+    privileged: true
+    image: docker:1.11
+    environment:
+      - DOCKER_HOST=tcp://127.0.0.1:2375
+    commands:
+      - docker build -t dsp-hello-world-karenp .
+    when:
+      branch: master
+      event: push
+
+  image_to_quay:
+    image: docker:1.11
+    environment:
+      - DOCKER_HOST=tcp://127.0.0.1:2375
+    commands:
+      - docker login -u="ukhomeofficedigital+dspworkshop" -p=${DOCKER_PASSWORD} quay.io
+      - docker tag node-hello-world quay.io/ukhomeofficedigital/dsp-hello-world-karenp:${DRONE_COMMIT_SHA}
+      - docker push quay.io/ukhomeofficedigital/dsp-hello-world-karenp:${DRONE_COMMIT_SHA}
+    when:
+      branch: master
+      event: push
+
+services:
+  dind:
+    image: docker:1.11-dind
+    privileged: true
+    command:
+      - "-s"
+      - "overlay"
